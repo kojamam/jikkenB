@@ -1,34 +1,62 @@
-#include "explode.h"
+/*
+ * explode.c
+ * UTF-8文字列を一文字ごとに切り分ける
+ */
+#include "morp.h"
 
-int main() {
-    int c;
+/* 仮 テスト用 */
+int main(int argc, char const *argv[]) {
+    Utf8Char utf8Char;
 
-    while((c = getchar()) != EOF){
-        char utf8Char[5];
-        CharType charType = TYPE_OTHERS;
-
-        if(c >= 0x0 && c <= 0x7F){
-            loadUtfChar(c, utf8Char, &charType, 1);
-        }else if(c >= 0xC2 && c <= 0xDF){
-            loadUtfChar(c, utf8Char, &charType, 2);
-        }else if(c >= 0xE0 && c <= 0xEF){
-            loadUtfChar(c, utf8Char, &charType, 3);
-        }else if(c >= 0xF0 && c <= 0xF7){
-            loadUtfChar(c, utf8Char, &charType, 4);
+    while(1){
+        explode(&utf8Char);
+        if(utf8Char.c[0] != EOF && utf8Char.type != TYPE_CONTROL){
+            printf("%s %s\n", utf8Char.c, charTypeName[utf8Char.type]);
         }else{
-            fprintf(stderr, "Input text isn't ncoded in UTF-8 code.\n");
-            return 1;
+            break;
         }
-
-        if(charType == TYPE_CONTROL){
-            continue;
-        }
-
-        printf("%s %s\n", utf8Char, charTypeName[charType]);
     }
 
     printf("\n");
     return 0;
+}
+
+/* 標準入力からUTF-8を1文字切り出す。
+ * @param char *utf8Char
+ * @param int numByte
+ * @return int unicode code point
+ */
+Result explode(Utf8Char *utf8Char) {
+
+    utf8Char->c[0] = getchar();
+    utf8Char->numByte = 0;
+    utf8Char->type = TYPE_UNKNOWN;
+
+    if(utf8Char->c[0] == EOF){
+        return OK;
+    }
+    int c = utf8Char->c[0] & 0xFF;
+
+    if(utf8Char->c[0] >= 0x0 && utf8Char->c[0] <= 0x7F){
+        utf8Char->numByte = 1;
+    }else if(c >= 0xC2 && c <= 0xDF){
+        utf8Char->numByte = 2;
+    }else if(c >= 0xE0 && c <= 0xEF){
+        utf8Char->numByte = 3;
+    }else if(c >= 0xF0 && c <= 0xF7){
+        utf8Char->numByte = 4;
+    }else{
+        fprintf(stdout, "Input text isn't ncoded in UTF-8 code.1\n");
+        return NG;
+    }
+
+    loadUtfChar(utf8Char);
+
+    if(utf8Char->type == TYPE_CONTROL){
+        return NG;
+    }
+
+    return OK;
 }
 
 /* コードポイントの作成
@@ -36,16 +64,16 @@ int main() {
  * @param int numByte
  * @return int unicode code point
  */
-int utf8ToCodepoint(char *utf8Char, int numByte) {
+int utf8ToCodepoint(Utf8Char *utf8Char) {
     int utf8BitShift =  6;
     int utf8ByteMuskHead[] = {0x7F, 0x1F, 0x0F, 0x07};
     int utf8ByteMusk = 0x3F;
     int codePoint;
 
-    codePoint = (utf8Char[0] & utf8ByteMuskHead[numByte-1]) << utf8BitShift*(numByte-1);
+    codePoint = (utf8Char->c[0] & utf8ByteMuskHead[utf8Char->numByte-1]) << utf8BitShift*(utf8Char->numByte-1);
 
-    for(int i=1; i<numByte; ++i){
-        codePoint |= (utf8Char[i] & utf8ByteMusk) << utf8BitShift*(numByte-i-1);
+    for(int i=1; i<utf8Char->numByte; ++i){
+        codePoint |= (utf8Char->c[i] & utf8ByteMusk) << utf8BitShift*(utf8Char->numByte-i-1);
     }
 
     return codePoint;
@@ -57,7 +85,7 @@ int utf8ToCodepoint(char *utf8Char, int numByte) {
  */
 CharType detectCharType(int codePoint) {
 
-    CharType charType = TYPE_OTHERS;
+    CharType charType = TYPE_UNKNOWN;
 
     if(codePoint >= 0x3040 && codePoint <= 0x309F){
         charType = TYPE_HIRAGANA;
@@ -80,7 +108,7 @@ CharType detectCharType(int codePoint) {
     }else if(codePoint == 0x20 || codePoint == 0x3000){
         charType = TYPE_SPACE;
     }else{
-        charType = TYPE_OTHERS;
+        charType = TYPE_UNKNOWN;
     }
 
     return charType;
@@ -92,47 +120,26 @@ CharType detectCharType(int codePoint) {
  * @param int numByte 文字のバイト数
  * @return CharType 文字種
  */
-int loadUtfChar(int c, char *utf8Char, CharType *charType, int numByte){
-    int i = 0;
+Result loadUtfChar(Utf8Char* utf8Char){
+    int i;
+    int c;
     int checkMusk = 0xC0;
     int checkBit = 0x80;
 
-    utf8Char[i++] = c;
 
-    while(i < numByte){
+    i = 1;
+    while(i < utf8Char->numByte){
         c  = getchar();
         if ((c & checkMusk) == checkBit) {
-            utf8Char[i++] = c;
+            utf8Char->c[i++] = c;
         }else{
-            fprintf(stderr, "Input text isn't ncoded in UTF-8 code.\n");
+            fprintf(stdout, "Input text isn't ncoded in UTF-8 code.2\n");
         }
     }
 
-    utf8Char[i] = '\0';
+    utf8Char->c[i] = '\0';
 
-    utf8charToInt(utf8Char, numByte);
+    utf8Char->type = detectCharType(utf8ToCodepoint(utf8Char));
 
-    *charType = detectCharType(utf8ToCodepoint(utf8Char, numByte));
-
-    return 0;
-}
-
-/* UTF-8文字をintに格納
-* @param char *utf8Char
-* @param int numByte
-* @return int utf8 in int
- */
-int utf8charToInt(char *utf8Char, int numByte) {
-    int utf8Int = 0;
-
-    utf8Int = utf8Char[0] & 0xFF;
-    // printf("%8x ", utf8Int);
-
-
-    for(int i=1; i<numByte; ++i){
-        utf8Int <<= 8;
-        utf8Int |= utf8Char[i] & 0xFF;
-    }
-    printf("%8x ", utf8Int);
-    return utf8Int;
+    return OK;
 }
