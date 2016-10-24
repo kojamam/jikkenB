@@ -89,7 +89,7 @@ CharType detectCharType(int codePoint) {
 
     if(codePoint >= 0x3040 && codePoint <= 0x309F){
         charType = TYPE_HIRAGANA;
-    }else if(codePoint >= 0x30A0 && codePoint <= 0x30FA){
+    }else if(codePoint >= 0x30A0 && codePoint <= 0x30FF){
         charType =TYPE_KATAKANA;
     }else if(codePoint >= 0x3000 && codePoint <= 0x303F){
         charType =TYPE_KUTOHTEN;
@@ -101,13 +101,20 @@ CharType detectCharType(int codePoint) {
         charType = TYPE_NUM;
     }else if((codePoint >= 0xFF21 && codePoint <= 0xFF3A) || (codePoint >= 0xFF41 && codePoint <= 0xFF5A)){
         charType = TYPE_MULTI_ALPHABET;
-    }else if((codePoint >= 0x3400 && codePoint <= 0x4DBF) || (codePoint >= 0x4E00 && codePoint <= 0x9FB7)){
+    }else if((codePoint >= 0x3400 && codePoint <= 0x4DBF)
+     || (codePoint >= 0x4E00 && codePoint <= 0x9FFF)
+     || (codePoint >= 0xF900 && codePoint <= 0xFAFF)
+     || (codePoint >= 0x20000 && codePoint <= 0x2A6DF)
+     || (codePoint >= 0x2A700 && codePoint <= 0x2CEAF)){
         charType = TYPE_KANJI;
     }else if((codePoint >= 0x0001 && codePoint <= 0x001F) || codePoint == 0x7F){
         charType = TYPE_CONTROL;
     }else if(codePoint == 0x20 || codePoint == 0x3000){
         charType = TYPE_SPACE;
-    }else{
+    }else if((codePoint >= 0x1F000 && codePoint <= 0x1F9FF) || (codePoint >= 0x2600 && codePoint <= 0x27BF)){
+        charType = TYPE_EMOJI;
+    }
+    else{
         charType = TYPE_UNKNOWN;
     }
 

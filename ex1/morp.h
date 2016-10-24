@@ -28,6 +28,7 @@ typedef enum CharType{
     TYPE_KUTOHTEN,
     TYPE_SPACE,
     TYPE_CONTROL,
+    TYPE_EMOJI,
     TYPE_UNKNOWN
 } CharType;
 
@@ -42,6 +43,7 @@ char *charTypeName[] = {
     "句読点",
     "スペース",
     "制御文字",
+    "絵文字",
     "その他"
 };
 

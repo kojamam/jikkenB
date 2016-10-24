@@ -11,14 +11,26 @@ char dicStr[10000000];
 char *endDicStr = dicStr;
 int  numEnt = 0;
 
+/* dicモジュールを初期化
+ * @param char* docFilename 辞書のファイル名
+ * @return Result
+ */
 Result initializeDicModule(char* dicFilename){
     loadDic(dicFilename);
     return OK;
 }
+
+/* dicモジュールの最終処理
+ * @return Result
+ */
 Result finalizeDicModule(){
     return OK;
 }
 
+/* ファイルをリードモードでオープン
+ * @param char* filename ファイル名
+ * @return FILE オープンしたファイル
+ */
 FILE *fopenRead(char *filename){
     FILE *fileR = fopen(filename, "r");
     if(fileR == NULL){
@@ -28,11 +40,18 @@ FILE *fopenRead(char *filename){
     return fileR;
 }
 
+/* ファイルから1行読み込む
+ * @param char *buf 読み込んだ文字列を格納する
+ * @param size_t size 読み込む最大文字数
+ * @param FILE 読み込み元ファイル
+ * @return int 読み込んだバイト数
+ */
 int fgetline(char *buf, size_t size, FILE *stream){
     int len;
     if(fgets(buf, size, stream) == NULL) return -1;
-    len = strlen(buf);
-    if(len == 0) return len;
+    if((len = strlen(buf)) == 0){
+        return len;
+    }
     if(buf[len-1] == '\n'){
         buf[len-1] = '\0';
         return len-1;
