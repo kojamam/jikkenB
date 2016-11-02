@@ -1,3 +1,6 @@
+#ifndef __INCLUDE_MORP_H__
+#define __INCLUDE_MORP_H__
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
@@ -9,6 +12,9 @@
 
 /* 辞書の最大エントリー数 */
 #define MAX_ENTRY_SIZE 150000
+
+/* 最大読み込み文字数 */
+#define MAX_INPUT_LEN 1000000
 
 /* 関数の終了ステータス */
 typedef enum Result{
@@ -32,7 +38,7 @@ typedef enum CharType{
     TYPE_UNKNOWN
 } CharType;
 
-char *charTypeName[] = {
+static char *charTypeName[] = {
     "ASCII",
     "ひらがな",
     "カタカナ",
@@ -47,33 +53,6 @@ char *charTypeName[] = {
     "その他"
 };
 
-/* 品詞 */
-typedef enum POS{
-    POS_DOSHI,
-    POS_KEIYOSHI,
-    POS_KEIYODOSHI,
-    POS_MEISHI,
-    POS_RENTAISHI,
-    POS_FUKUSHI,
-    POS_SETSUZOKUSHI,
-    POS_KANDOSHI,
-    POS_JOSHI,
-    POS_JODOSHI
-}POS;
-
-char *posName[] = {
-    "動詞",
-    "形容詞",
-    "形容動詞",
-    "名詞",
-    "連体詞",
-    "副詞",
-    "接続詞",
-    "感動詞",
-    "助詞",
-    "助動詞"
-};
-
 /* utf8の文字 */
 typedef struct Utf8Char{
     char c[5];
@@ -81,7 +60,7 @@ typedef struct Utf8Char{
     CharType type;
 }Utf8Char;
 
-/* 単語 */
+/* 単語ポインタ */
 typedef struct WordPtr{
     char* midashi; //単語
     char* yomi; //よみがな
@@ -92,18 +71,21 @@ typedef struct WordPtr{
 
 
 
-/* explde.cに定義されている関数 */
+/* chars.cに定義されている関数 */
 Result explode(Utf8Char*);
 int utf8ToCodepoint(Utf8Char *utf8Char);
 CharType detectCharType(int);
 Result loadUtfChar(Utf8Char*);
+int combineChars(Utf8Char*, char*, int, int);
 
 /* dic.cに定義されている関数群 */
-Result initializeDicModule(char*);
+int initializeDicModule(char*);
 Result finalizeDicModule();
 int loadDic(char *filename);
 FILE *fopenRead(char *filename);
 int fgetline(char *buf, size_t size, FILE *stream);
 void printUsage();
-int lookup(char *word);
+int lookup(char *word, int min, int max);
 void printWord(int ent);
+
+#endif

@@ -1,9 +1,10 @@
 /*
- * explode.c
- * UTF-8文字列を一文字ごとに切り分ける
+ * chars.c
+ * UTF-8文字列を扱う
  */
 #include "morp.h"
 
+#ifdef CHARS_DEBUG
 /* 仮 テスト用 */
 int main(int argc, char const *argv[]) {
     Utf8Char utf8Char;
@@ -19,6 +20,21 @@ int main(int argc, char const *argv[]) {
 
     printf("\n");
     return 0;
+}
+#endif
+
+/* explodeモジュールを初期化
+ * @return Result
+ */
+Result initializeExplodeModule(){
+    return OK;
+}
+
+/* explodeモジュールの最終処理
+ * @return Result
+ */
+Result finalizeExplodeModule(){
+    return OK;
 }
 
 /* 標準入力からUTF-8を1文字切り出す。
@@ -149,4 +165,17 @@ Result loadUtfChar(Utf8Char* utf8Char){
     utf8Char->type = detectCharType(utf8ToCodepoint(utf8Char));
 
     return OK;
+}
+
+int combineChars(Utf8Char* utf8Chars, char word[], int start, int len){
+    int numByte = 0;
+
+    for(int i=0; i<len; ++i){
+        for (int j=0; j<utf8Chars[i].numByte; j++) {
+            word[numByte++] = utf8Chars[start+i].c[j];
+        }
+    }
+    word[numByte] = '\0';
+
+    return 0;
 }

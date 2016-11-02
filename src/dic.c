@@ -15,9 +15,8 @@ int  numEnt = 0;
  * @param char* docFilename 辞書のファイル名
  * @return Result
  */
-Result initializeDicModule(char* dicFilename){
-    loadDic(dicFilename);
-    return OK;
+int initializeDicModule(char* dicFilename){
+    return loadDic(dicFilename);
 }
 
 /* dicモジュールの最終処理
@@ -60,11 +59,17 @@ int fgetline(char *buf, size_t size, FILE *stream){
     }
 }
 
+/* 使用方法を表示
+ */
 void printUsage(){
     fprintf(stderr, "Usage: readdic dicfile < text > lookup_result\n");
     exit(2);
 }
 
+/* ファイルから辞書を読み込んでメモリに格納
+ * @param char *filename 読み込む辞書ファイルの名前
+ * @return 読み込んだ単語数
+ */
 int loadDic(char *filename){
     char buf[10000], midasi[200], yomi[200], kihon[200], pos[200];
     float uni;
@@ -93,17 +98,34 @@ int loadDic(char *filename){
     return num;
 }
 
-
-int lookup(char *word){
-    int i;
-
-/*  linear search */
-    for(i = 0; i < numEnt; i++){
-        if(!strcmp(word, wordPtr[i].midashi)) return i;
+/* 二分探索で単語を見つける(再帰)
+ * @param char *word 探す文字列
+ * @param int min 探索する最小エントリー
+ * @param int max 探索する最大エントリー
+ * @return int 見つけたエントリー。なければ-1
+ */
+int lookup(char *word, int min, int max){
+    if(min > max){
+        return -1;
     }
 
-    return -1;
+    int ent = (max - min)/2 + min;
+    int diff = strcmp(word, wordPtr[ent].midashi);
+
+    // printf("%d %d %d\n", min, ent, max);
+    if(diff > 0){
+        return lookup(word, ent+1, max);
+    }else if(diff < 0){
+        return lookup(word, min, ent-1);
+    }else{
+        return ent;
+    }
 }
+
+
+/* 単語の表示
+ * @param int ent 表示する単語のエントリー
+ */
 void printWord(int ent){
     if(ent == -1){
         printf("Unknown word!!\n");
@@ -112,6 +134,7 @@ void printWord(int ent){
     }
 }
 
+#ifdef DIC_DEBUG
 int main(int ac, char **av){
     initializeDicModule(av[1]);
 
@@ -119,7 +142,8 @@ int main(int ac, char **av){
 
     if(ac != 2) printUsage();
     while(fgetline(buf, sizeof(buf), stdin) != -1){
-        printWord(lookup(buf));
+        printWord(lookup(buf, 0, numEnt-1));
     }
     return 0;
 }
+#endif
