@@ -171,7 +171,7 @@ int combineChars(Utf8Char* utf8Chars, char word[], int start, int len){
     int numByte = 0;
 
     for(int i=0; i<len; ++i){
-        for (int j=0; j<utf8Chars[i].numByte; j++) {
+        for (int j=0; j<utf8Chars[start+i].numByte; j++) {
             word[numByte++] = utf8Chars[start+i].c[j];
         }
     }

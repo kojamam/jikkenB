@@ -14,7 +14,9 @@
 #define MAX_ENTRY_SIZE 150000
 
 /* 最大読み込み文字数 */
-#define MAX_INPUT_LEN 1000000
+#define MAX_INPUT_LEN 10000000
+
+#define MAX_WORD_LIST 5
 
 /* 関数の終了ステータス */
 typedef enum Result{
@@ -86,6 +88,8 @@ FILE *fopenRead(char *filename);
 int fgetline(char *buf, size_t size, FILE *stream);
 void printUsage();
 int lookup(char *word, int min, int max);
+int lookupLinear(char *);
 void printWord(int ent);
+double getCost(int ent);
 
 #endif

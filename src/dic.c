@@ -122,6 +122,21 @@ int lookup(char *word, int min, int max){
     }
 }
 
+/* 線形探索で単語を見つける(再帰)
+ * @param char *word 探す文字列
+ * @return int 見つけたエントリー。なければ-1
+ */
+int lookupLinear(char *word){
+
+    for(int ent=0; ent<numEnt; ++ent){
+        if(strcmp(word, wordPtr[ent].midashi) == 0){
+            return ent;
+        }
+    }
+
+    return -1;
+}
+
 
 /* 単語の表示
  * @param int ent 表示する単語のエントリー
@@ -132,6 +147,10 @@ void printWord(int ent){
     } else {
         printf("%s\t%s\t%s\t%s\t%f\n", wordPtr[ent].midashi, wordPtr[ent].yomi, wordPtr[ent].kihon, wordPtr[ent].pos, *wordPtr[ent].uni);
     }
+}
+
+double getCost(int ent){
+    return *wordPtr[ent].uni;
 }
 
 #ifdef DIC_DEBUG
