@@ -6,11 +6,10 @@
 #include "morp.h"
 
 WordPtr dicPtr[MAX_ENTRY_SIZE];
-
-char dicStr[10000000];
+char dicStr[MAX_ENTRY_SIZE*50]; //辞書の格納メモリ
 char *endDicStr = dicStr;
 int  numEnt = 0;
-int trie[TRIE_NUM_NODE][256]; //トライの疎行列
+int trie[TRIE_NUM_NODE][0xFF]; //トライの疎行列
 int trieWord[TRIE_NUM_NODE]; //ノードの単語 => emptyのときは-2, 単語じゃないときは-1
 int emptyNode = 0;
 

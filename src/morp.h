@@ -3,20 +3,20 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/stat.h>
-#include <fcntl.h>
 #include <string.h>
+#include <time.h>
 
 /* 単語の最大文字数 */
 #define MAX_WORDLEN 16
 
-/* 辞書の最大エントリー数 */
+/* 辞書の最大エントリー数 (jdic.utf8.sortedは115829エントリー) */
 #define MAX_ENTRY_SIZE 150000
 
 /* 最大読み込み文字数 */
 #define MAX_INPUT_LEN 10000000
 
-#define TRIE_NUM_NODE 500000 //実測で372197ノードまで使った
+/* トライの最大ノード数(実測で372197ノードまで使った) */
+#define TRIE_NUM_NODE 500000
 
 /* 関数の終了ステータス */
 typedef enum Result{
@@ -41,18 +41,18 @@ typedef enum CharType{
 } CharType;
 
 static char *charTypeName[] = {
-    "ASCII",
-    "ひらがな",
-    "カタカナ",
-    "長音",
-    "数字",
-    "2byteアルファベット",
-    "漢字",
-    "句読点",
-    "スペース",
-    "制御文字",
-    "絵文字",
-    "その他"
+    (char*)"ASCII",
+    (char*)"ひらがな",
+    (char*)"カタカナ",
+    (char*)"長音",
+    (char*)"数字",
+    (char*)"2byteアルファベット",
+    (char*)"漢字",
+    (char*)"句読点",
+    (char*)"スペース",
+    (char*)"制御文字",
+    (char*)"絵文字",
+    (char*)"その他"
 };
 
 /* utf8の文字 */
