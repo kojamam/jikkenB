@@ -5,17 +5,21 @@
  */
 #include "morp.h"
 
-WordPtr wordPtr[MAX_ENTRY_SIZE];
+WordPtr dicPtr[MAX_ENTRY_SIZE];
 
 char dicStr[10000000];
 char *endDicStr = dicStr;
 int  numEnt = 0;
+int trie[TRIE_NUM_NODE][256]; //トライの疎行列
+int trieWord[TRIE_NUM_NODE]; //ノードの単語 => emptyのときは-2, 単語じゃないときは-1
+int emptyNode = 0;
 
 /* dicモジュールを初期化
  * @param char* docFilename 辞書のファイル名
  * @return Result
  */
 int initializeDicModule(char* dicFilename){
+    initTrie();
     return loadDic(dicFilename);
 }
 
@@ -73,29 +77,90 @@ void printUsage(){
 int loadDic(char *filename){
     char buf[10000], midasi[200], yomi[200], kihon[200], pos[200];
     float uni;
-    int  num = 0;
+    int  i = 0;
     FILE *dicFile = fopenRead(filename);
     while(fgetline(buf, sizeof(buf), dicFile) != -1){
         sscanf(buf, "%s%s%s%s%f", midasi, yomi, kihon, pos, &uni);
         strcpy(endDicStr, midasi);
-        wordPtr[num].midashi = endDicStr;
+        dicPtr[i].midashi = endDicStr;
         endDicStr += strlen(midasi)+1;
         strcpy(endDicStr, yomi);
-        wordPtr[num].yomi = endDicStr;
+        dicPtr[i].yomi = endDicStr;
         endDicStr += strlen(yomi)+1;
         strcpy(endDicStr, kihon);
-        wordPtr[num].kihon = endDicStr;
+        dicPtr[i].kihon = endDicStr;
         endDicStr += strlen(kihon)+1;
         strcpy(endDicStr, pos);
-        wordPtr[num].pos = endDicStr;
+        dicPtr[i].pos = endDicStr;
         endDicStr += strlen(pos)+1;
         memcpy(endDicStr, &uni, sizeof(float));
-        wordPtr[num].uni = (float*)endDicStr;
+        dicPtr[i].uni = (float*)endDicStr;
         endDicStr += sizeof(float);
-        num++;
+
+        insertTrie(dicPtr[i].midashi, i);
+
+        i++;
     }
-    numEnt = num;
-    return num;
+    numEnt = i;
+
+    return i;
+}
+
+/*
+ * トライ木を初期化
+ * @return 終了ステータス
+ */
+Result initTrie(){
+    //初期化
+    for (size_t i = 0; i < TRIE_NUM_NODE; i++) {
+        for (size_t j = 0; j < 256; j++) {
+            trie[i][j] = -1;
+        }
+        trieWord[i] = -2;
+    }
+    trieWord[0] = -1;
+
+    return OK;
+}
+
+/*
+ * トライ木に単語を挿入
+ * @param char *word 挿入する単語
+ * @param int ent エントリー番号
+ * @return 終了ステータス
+ */
+Result insertTrie(char *word, int ent){
+    int node = 0;
+    for (size_t i = 0; i < strlen(word); i++) {
+        if(trie[node][(unsigned char)word[i]] >= 0){
+            node = trie[node][(unsigned char)word[i]];
+        }else{
+            trieWord[emptyNode] = -1;
+            trie[node][(unsigned char)word[i]] = emptyNode;
+            node = emptyNode++;
+        }
+
+    }
+
+    trieWord[node] = ent;
+
+    return OK;
+}
+
+/* 二分探索で単語を見つける(再帰)
+ * @param char *word 探す文字列
+ * @return int 見つけたエントリー。なければ-1
+ */
+int lookupTrie(char *word){
+    int node = 0;
+    for (size_t i = 0; i < strlen(word); i++) {
+        if(trie[node][(unsigned char)word[i]] >= 0){
+            node = trie[node][(unsigned char)word[i]];
+        }else{
+            return -1;
+        }
+    }
+    return trieWord[node];
 }
 
 /* 二分探索で単語を見つける(再帰)
@@ -110,7 +175,7 @@ int lookup(char *word, int min, int max){
     }
 
     int ent = (max - min)/2 + min;
-    int diff = strcmp(word, wordPtr[ent].midashi);
+    int diff = strcmp(word, dicPtr[ent].midashi);
 
     // printf("%d %d %d\n", min, ent, max);
     if(diff > 0){
@@ -129,7 +194,7 @@ int lookup(char *word, int min, int max){
 int lookupLinear(char *word){
 
     for(int ent=0; ent<numEnt; ++ent){
-        if(strcmp(word, wordPtr[ent].midashi) == 0){
+        if(strcmp(word, dicPtr[ent].midashi) == 0){
             return ent;
         }
     }
@@ -143,14 +208,14 @@ int lookupLinear(char *word){
  */
 void printWord(int ent){
     if(ent == -1){
-        printf("Unknown word!!\n");
+        printf("定義なし\n");
     } else {
-        printf("%s\t%s\t%s\t%s\t%f\n", wordPtr[ent].midashi, wordPtr[ent].yomi, wordPtr[ent].kihon, wordPtr[ent].pos, *wordPtr[ent].uni);
+        printf("%s\t%s\t%s\t%s\n", dicPtr[ent].midashi, dicPtr[ent].yomi, dicPtr[ent].kihon, dicPtr[ent].pos);
     }
 }
 
 double getCost(int ent){
-    return *wordPtr[ent].uni;
+    return *dicPtr[ent].uni;
 }
 
 #ifdef DIC_DEBUG

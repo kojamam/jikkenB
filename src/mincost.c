@@ -1,4 +1,5 @@
 #include "morp.h"
+#include <time.h>
 
 int main(int argc, char *argv[]) {
 
@@ -8,6 +9,7 @@ int main(int argc, char *argv[]) {
     int numChars = 0;
     int len = MAX_WORDLEN;
 
+    clock_t time1 = clock();
     /*辞書の読み込み*/
     numEnt = initializeDicModule(argv[1]);
     input = (Utf8Char*)malloc(sizeof(Utf8Char)*MAX_INPUT_LEN);
@@ -15,7 +17,6 @@ int main(int argc, char *argv[]) {
     /* 入力の読み込み */
     while(1){
        explode(&input[numChars]);
-    //    printf("%s\n", input[numChars].c);
        if(input[numChars].c[0] == EOF){
            break;
        }
@@ -31,7 +32,8 @@ int main(int argc, char *argv[]) {
 
    len = 1;
 
-   //ここにロジックを書く
+   clock_t time2 = clock();
+   //単語コスト最小法
    int x = 0; //x
    int ent; //w
    int i; //i
@@ -60,8 +62,7 @@ int main(int argc, char *argv[]) {
            len = x2 - i2 + 1;
 
            combineChars(input, word, i2, len);
-           if((ent = lookup(word, 0, numEnt-1)) != -1){
-
+           if((ent = lookupTrie(word)) != -1){
                //見つかった
                double tCost = getCost(ent);
 
@@ -74,7 +75,7 @@ int main(int argc, char *argv[]) {
                }
            }
        }
-       // TODO 辞書にない単語の処理
+       // 辞書にない単語の処理
        if(foundFlag == 0){
            i = x;
            mincost[x] = mincost[i-1] + 20;
@@ -87,10 +88,8 @@ int main(int argc, char *argv[]) {
    int *correctWordListR = (int*)malloc(sizeof(int)*(numChars+1));
    int *correctStartR = (int*)malloc(sizeof(int)*(numChars+1));
 
-
    correctWordListR[0] = wordList[x-1];
    x = start[x-1] - 1;
-
 
    // バックトラック
    int k;
@@ -100,6 +99,8 @@ int main(int argc, char *argv[]) {
        x = start[x] - 1;
 
    }
+
+   clock_t time3 = clock();
 
    //表示
    for (k--; k >= 0; k--) {
@@ -116,6 +117,14 @@ int main(int argc, char *argv[]) {
    free(start);
    free(correctWordListR);
 
+
+   clock_t time4 = clock();
+
+   printf( "読み込みの処理時間:%lf[s]\n", ((double)time2-time1)/CLOCKS_PER_SEC);
+
+   printf( "形態素解析の処理時間:%lf[s]\n", ((double)time3-time2)/CLOCKS_PER_SEC);
+
+   printf( "全体の処理時間:%lf[s]\n", ((double)time4-time1)/CLOCKS_PER_SEC);
 
     return 0;
 }

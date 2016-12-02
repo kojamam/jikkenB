@@ -8,7 +8,7 @@
 #include <string.h>
 
 /* 単語の最大文字数 */
-#define MAX_WORDLEN 50
+#define MAX_WORDLEN 16
 
 /* 辞書の最大エントリー数 */
 #define MAX_ENTRY_SIZE 150000
@@ -16,7 +16,7 @@
 /* 最大読み込み文字数 */
 #define MAX_INPUT_LEN 10000000
 
-#define MAX_WORD_LIST 5
+#define TRIE_NUM_NODE 500000 //実測で372197ノードまで使った
 
 /* 関数の終了ステータス */
 typedef enum Result{
@@ -57,9 +57,9 @@ static char *charTypeName[] = {
 
 /* utf8の文字 */
 typedef struct Utf8Char{
-    char c[5];
-    int numByte;
-    CharType type;
+    char c[5]; //utf8文字
+    int numByte; //バイト数
+    CharType type; //文字種
 }Utf8Char;
 
 /* 単語ポインタ */
@@ -91,5 +91,9 @@ int lookup(char *word, int min, int max);
 int lookupLinear(char *);
 void printWord(int ent);
 double getCost(int ent);
+Result initTrie();
+int searchEmptyNode();
+Result insertTrie(char *word, int ent);
+int lookupTrie(char *word);
 
 #endif
