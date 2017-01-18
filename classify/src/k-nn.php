@@ -3,13 +3,15 @@
 class Vec
 {
     public $classId = null;
+    public $className = '';
     public $vec = [];
 
-    function __construct(string $line)
+    function __construct($line)
     {
-        $tVec = explode($string, ' ');
+        $tVec = explode(' ', $line);
         foreach ($tVec as $elem) {
-            $this->vec[] = explode($elem, ':');
+            list($k, $v) = explode(':', $elem);
+            $this->vec[$k] = (float)$v;
         }
 
         return $this;
@@ -18,6 +20,11 @@ class Vec
     public function setClassId($classId)
     {
         $this->classId = $classId;
+        if($classId === 0){
+            $this->className = 'mp3player';
+        }else if($classId === 1){
+            $this->className = 'cleaner';
+        }
         return $this;
     }
 
@@ -53,30 +60,31 @@ class K_NN
         }
     }
 
-    function readTestVec($fileneme)
+    function readTestVec($fileName)
     {
         $trainFile = fopen($fileName, 'r');
         while($line = fgets($trainFile)){
             $this->testVecs[] = new Vec($line);
         }
+
     }
 
     public function calcKNN()
     {
         //testVecId番目の入力文書に対して
         foreach ($this->testVecs as $testVecId => $testVec) {
+            $knnSum = [];
             foreach ($this->trainVecs as $classId => $classVecs) {
+                $this->knns[$classId] = null;
                 foreach ($classVecs as $classVecId => $trainVec) {
                     $sim = $this->calcCosSim($testVec, $trainVec);
-                    if(count($knns[$classId] < $k)){
-                        $knns[$classId][] = $sim;
-                    }elseif($sim > min($knns[$classId])){
-                        array_pop($knns[$classId]);
-                        $knns[$classId][] = $sim;
-                    }
-                    $knns[$classId] = rsort($knns[$classId]);
+                    $this->knns[$classId][] = $sim;
                 }
+                rsort($this->knns[$classId]);
+                $this->knns[$classId] = array_slice($this->knns[$classId], 0, $this->k);
+                $knnSum[$classId] = array_sum($this->knns[$classId]);
             }
+            $this->testVecs[$testVecId]->setClassId(array_keys($knnSum, max($knnSum))[0]);
         }
     }
 
@@ -93,4 +101,18 @@ class K_NN
 
     }
 
+    public function printResult(){
+        foreach ($this->testVecs as $testVec) {
+            echo $testVec->className, "\n";
+        }
+    }
+
 }
+
+
+$knn = new K_NN();
+$knn->k = 5;
+$knn->readTrainVec(['../data/train.mp3player.vec=tfidf.txt', '../data/train.cleaner.vec=tfidf.txt']);
+$knn->readTestVec('../data/test.vec=tfidf.txt');
+$knn->calcKNN();
+$knn->printResult();
