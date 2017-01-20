@@ -1,14 +1,13 @@
 #!/usr/bin/env ruby
 
-$KCODE = 'u';
 
-require 'getopts';
-getopts('a:','b:');
+require 'optparse';
+params = ARGV.getopts("r:a:")
 
 # ----- ----- ----- ----- -----
 
-fpa = open( $OPT_a );
-fpb = open( $OPT_b );
+fpa = open( params["r"] );
+fpb = open( params["a"] );
 
 cc = 0; cm = 0; mc = 0; mm = 0; z = 0;
 
